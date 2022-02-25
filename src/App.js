@@ -25,7 +25,7 @@ const employeesStore = new ArrayStore({
 const employeesDataSource = new DataSource({
   store: employeesStore,
   paginate: true,
-  pageSize: 3,
+  pageSize: 10,
 });
 const gridBox_displayExpr = function (item) {
   return (
@@ -63,6 +63,7 @@ function reducer(state, action) {
         dropdownInstance: action.dropdownInstance,
       };
     case "dataGridInstance":
+      console.log(action.instance);
       return {
         ...state,
         dataGridInstance: action.instance,
@@ -106,7 +107,8 @@ function App() {
     () =>
       new DataSource({
         store: employeesStore,
-        searchExpr: ["StoreCity", "StoreState", "Employee"],
+        searchExpr: ["StoreState"],
+        // searchExpr: ["StoreCity", "StoreState", "Employee"],
       }),
     []
   );
@@ -119,21 +121,31 @@ function App() {
     dataGridInstance,
     dropdownInstance,
   } = state;
-
-  const dropDownBoxValueChanged = (args) => {
-    console.log("co gi", args);
+const dropDownBoxValueChanged = (args) => {
     clearTimeout(searchTimer);
     dispatch({ value: args.value, opened: true, type: "all" });
   };
   const onInput = function (e) {
+    console.log(333);
     // this.pageIndex(0)
     clearTimeout(searchTimer);
     searchTimer = setTimeout(function () {
       let text = e.component.option("text");
+      // console.log(gridDataSource._items[0].OrderNumber);
+      // console.log(gridDataSource._items);
+      // console.log(gridDataSource._items.length);
+      for (let i = 0; i < gridDataSource._items.length; i++) {
+        const element = gridDataSource._items[i];
+        console.log(gridDataSource._items);
+      }
+
       gridDataSource.searchValue(text);
       if (opened && isSearchIncomplete(e.component)) {
+        // console.log(gridDataSource);
         gridDataSource.load().then((items) => {
           if (items.length > 0 && dataGridInstance)
+          // console.log(items.length,items);
+          // console.log(focusedRowKey);
             dispatch({
               focusedRowKey: items[0].OrderNumber,
               type: "focusedRowKey",
@@ -142,8 +154,10 @@ function App() {
       } else {
         dispatch({ opened: true, type: "open/close" });
       }
-    }, 500);
+    }, 0);
   };
+  // console.log(gridDataSource);
+  // console.log(employeesDataSource);
   const onKeyDown = (e) => {
     let ddbInstance = e.component;
     if (
@@ -160,10 +174,9 @@ function App() {
         .store()
         .load()
         .then((items) => {
-          console.log(employeesDataSource, "item");
-          console.log(focusedRowIndex, focusedRowKey, items.length);
+          // console.log(focusedRowIndex, focusedRowKey, items.length);
           if (items.length > 0 && dataGridInstance && e.event.keyCode === 40) {
-            console.log("giam");
+            console.log(items.length);
             dispatch({
               focusedRowIndex:
                 focusedRowIndex < items.length - 1 ? focusedRowIndex + 1 : 0,
@@ -175,7 +188,6 @@ function App() {
             });
           }
           if (items.length > 0 && dataGridInstance && e.event.keyCode === 38) {
-            console.log("tang");
             dispatch({
               focusedRowIndex:
                 focusedRowIndex > 0 ? focusedRowIndex - 1 : items.length - 1,
@@ -190,11 +202,12 @@ function App() {
           if (e.event.keyCode === 13) {
             dispatch({
               value: items[focusedRowIndex],
-              opened: false,
+              opened: true,
               type: "all",
             });
+              // dispatch({ value: e.selectedRowKeys, opened: false, type: "all" });
           }
-        });
+});
     }
   };
   const onOpened = (e) => {
@@ -292,7 +305,7 @@ function App() {
                 dropdownInstance: dropdownInstance,
                 dispatch: dispatch,
                 focusedRowKey: focusedRowKey,
-                focusedRowIndex: focusedRowIndex,
+focusedRowIndex: focusedRowIndex,
               }}>
               <DropDownBox
                 showClearButton={true}
@@ -333,13 +346,19 @@ const DataGridComponent = ({ data }) => {
     dropdownInstance,
   } = useContext(DropDownBoxDispatch);
   const selectionChanged = (e) => {
-    // setTimeout(() => {
-    //   e.component.focus();
-    //   dropdownInstance.field().select();
-    // }, 0);
-    // console.log(444);
+    // const grid = e.component;
 
-    // e.component.focus()
+    // let rowIndex = grid.getRowIndexByKey(e.selectedRowKeys[0]);
+    // const controller = grid.getController("data");
+    // rowIndex += controller.getRowIndexOffset();
+
+    setTimeout(() => {
+      e.component.focus();
+      dropdownInstance.field().select();
+    }, 0);
+    // // console.log(444);
+
+    // // e.component.focus()
     dispatch({ value: e.selectedRowKeys, opened: false, type: "all" });
   };
   const contentReady = (e) => {
@@ -357,12 +376,12 @@ const DataGridComponent = ({ data }) => {
       type: "focusedRowKey",
     });
   };
-  const onCell = () => {
-    console.log("oncellClick");
-  };
-  const onR = (e) => {
-    console.log("onFocusedRowChanging");
-  };
+    const onCell = () => {
+      console.log("oncellClick");
+    };
+    const onR = (e) => {
+      console.log("onFocusedRowChanging");
+    };
   return (
     <DataGrid
       onCellClick={onCell}
@@ -380,10 +399,11 @@ const DataGridComponent = ({ data }) => {
       defaultSelectedRowKeys={value}
       columnWidth={100}
       width="100%"
-      height="100%">
-      <Column dataField="OrderNumber" caption="ID" dataType="number" />
+      height="100%"
+      >
+      {/* <Column dataField="OrderNumber" caption="ID" dataType="number" /> */}
       <Column dataField="OrderDate" format="shortDate" dataType="date" />
-      <Column dataField="StoreState" dataType="string" />
+<Column dataField="StoreState" dataType="string" />
       <Column dataField="StoreCity" dataType="string" />
       <Column dataField="Employee" dataType="string" />
       <Column dataField="SaleAmount" dataType="number">
